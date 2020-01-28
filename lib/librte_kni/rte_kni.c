@@ -359,13 +359,15 @@ va2pa(struct rte_mbuf *m)
 static void *
 va2pa_all(struct rte_mbuf *mbuf)
 {
-	void *phy_mbuf = va2pa(mbuf);
+	void *phy_mbuf = (void*)rte_mempool_virt2iova(mbuf);
 	struct rte_mbuf *next = mbuf->next;
 	while (next) {
-		mbuf->next = va2pa(next);
+		mbuf->userdata = mbuf;
+		mbuf->next = (void*)rte_mempool_virt2iova(next);
 		mbuf = next;
 		next = mbuf->next;
 	}
+	mbuf->userdata = mbuf;
 	return phy_mbuf;
 }
 
@@ -652,6 +654,8 @@ kni_allocate_mbufs(struct rte_kni *kni)
 			 offsetof(struct rte_kni_mbuf, buf_addr));
 	RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, next) !=
 			 offsetof(struct rte_kni_mbuf, next));
+	RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, userdata) !=
+			 offsetof(struct rte_kni_mbuf, va));
 	RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, data_off) !=
 			 offsetof(struct rte_kni_mbuf, data_off));
 	RTE_BUILD_BUG_ON(offsetof(struct rte_mbuf, data_len) !=

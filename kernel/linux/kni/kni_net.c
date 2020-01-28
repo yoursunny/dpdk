@@ -377,7 +377,7 @@ kni_net_rx_normal(struct kni_dev *kni)
 		kva = get_kva(kni, kni->pa[i]);
 		len = kva->pkt_len;
 		data_kva = get_data_kva(kni, kva);
-		kni->va[i] = pa2va(kni->pa[i], kva);
+		kni->va[i] = kva->va;
 
 		skb = netdev_alloc_skb(dev, len);
 		if (!skb) {
@@ -403,7 +403,7 @@ kni_net_rx_normal(struct kni_dev *kni)
 				kva = pa2kva(kva->next);
 				data_kva = kva2data_kva(kva);
 				/* Convert physical address to virtual address */
-				prev_kva->next = pa2va(prev_kva->next, kva);
+				prev_kva->next = kva->va;
 			}
 		}
 
